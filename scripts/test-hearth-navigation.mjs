@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+const out=new URL('../node_modules/.cache-hearth-nav-test.mjs',import.meta.url).pathname;
+await build({entryPoints:[new URL('../src/dashboard/hearthNavigation.ts',import.meta.url).pathname],bundle:true,format:'esm',outfile:out,platform:'node',logLevel:'error'});
+const {HEARTH_NAV,moveHearthFocus}=await import(out);
+let focus={zone:'tiles',nav:0,tile:16};focus=moveHearthFocus(focus,'up',17);assert.equal(focus.zone,'nav','top navigation is one Up away even at the far end of the app row');
+for(let i=0;i<6;i++)focus=moveHearthFocus(focus,'right',17);assert.equal(HEARTH_NAV[focus.nav].key,'dashboard-themes');
+focus=moveHearthFocus(focus,'down',17);assert.equal(focus.tile,16,'returning preserves the app selection');
+assert.equal(moveHearthFocus({zone:'tiles',nav:0,tile:0},'left',0).tile,0);
+assert.equal(moveHearthFocus({zone:'nav',nav:7,tile:0},'right',0).nav,7);
+assert.deepEqual(HEARTH_NAV.filter(x=>x.key.startsWith('dashboard-')).map(x=>x.key),['dashboard-music','dashboard-queue','dashboard-visualisers','dashboard-system','dashboard-themes']);
+console.log('ok   Hearth Plus always-visible feature routes, theme access, focus retention and empty lists');

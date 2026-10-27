@@ -10,6 +10,7 @@ is **not** covered by that licence.
 
 | Component | Licence | Where |
 |---|---|---|
+| [QR Code Generator](https://github.com/kazuhikoarase/qrcode-generator) | MIT, © Kazuhiko Arase | compiled into `assets/app.js`; licence text in [public/licenses/qrcode-generator-MIT.txt](public/licenses/qrcode-generator-MIT.txt) |
 | [Preact](https://preactjs.com) | MIT, © Jason Miller | compiled into `assets/app.js`; licence text in [public/licenses/preact-MIT.txt](public/licenses/preact-MIT.txt) |
 | [Inter](https://rsms.me/inter/) typeface | SIL Open Font License 1.1, © The Inter Project Authors | `src/assets/inter-latin-wght.woff2`; licence text in [public/licenses/Inter-OFL.txt](public/licenses/Inter-OFL.txt) |
 | Poppins typeface | SIL Open Font License 1.1, © The Poppins Project Authors | `src/assets/poppins-latin-*.woff2`; licence text in [public/licenses/Poppins-OFL.txt](public/licenses/Poppins-OFL.txt) |
@@ -32,3 +33,49 @@ removed can open an issue on this repository and it will be removed. Every app t
 back to a plain text tile without its icon, so removal doesn't break anything.
 
 "LG" and "webOS" are trademarks of LG Electronics.
+
+## Music protocol references
+
+The TV music service implements the TV-code sign-in flow described by
+[YouTube.js](https://ytjs.dev/guide/authentication) and uses client context values
+documented in [yt-dlp](https://github.com/yt-dlp/yt-dlp). It does not bundle either
+project. The music integration is unofficial and is not affiliated with Google.
+
+## MC360 reference and assets
+
+Blades 360 adapts the sliding-sheet layout of **MC360 (Media Center 360)** by
+**Team Blackbolt**, with graphics by Blackbolt and Jezz-X. The layout was informed by the
+[MC360 source archive](https://github.com/Team-Resurgent/XBMC-Skinning-Project/tree/484fa2309eab69291d546398d7444e3d761f8cac/MC360).
+
+Original MC360 textures and WAVs are **not distributed in this repository**:
+the archive readme does not establish a redistribution licence. The public build
+uses CSS gradients and synthesised navigation cues. A local installation can
+retain optional assets in the ignored `public/mc360/` folder. They remain subject
+to their owners' terms and are not covered by Hearth's MIT licence. Hearth is not
+affiliated with Team Blackbolt or Microsoft.
+
+## Music visualisers
+
+- [Butterchurn 2.6.7](https://github.com/jberg/butterchurn) and
+  [butterchurn-presets 2.4.7](https://github.com/jberg/butterchurn-presets) are MIT
+  licensed. Licence texts are in `public/licenses/`; the Minimal and MD1 preset
+  bundles retain preset authors' names. Butterchurn is a browser implementation
+  of MilkDrop, not the original Xbox binary.
+- [GOOM Online](https://github.com/goom-online/goom-online.github.io/tree/a83821017af77077b75a2dae8676967053924fec)
+  contains the LGPL GOOM engine. The unmodified corresponding upstream source
+  archive, source revision, and modified JavaScript adapter source are bundled
+  in `public/visualizers/`. `scripts/build-goom-adapter.py` reproduces the adapter;
+  the embedded WebAssembly engine is unchanged. LGPL text is in
+  `public/licenses/goom-LGPL.txt`.
+- [Kodi Shadertoy presets](https://github.com/xbmc/visualization.shadertoy/tree/034413fa3c8a1488c5f2a0603430439b242aa49f)
+  are included as unmodified GLSL sources and textures in
+  `public/visualizers/kodi-shaders/`. Individual shader headers retain authors,
+  attribution links and licence terms, including CC BY-NC-SA notices. They are
+  not covered by Hearth's MIT licence; the upstream framework GPL notice does
+  not replace individual preset terms. This personal TV customization must not
+  be assumed suitable for commercial redistribution. Hearth supplies a separate
+  WebGL adapter for the original shader inputs.
+
+Spectrum, Waveform, Boxalizer style, Fountain style, Saville style, StarBurst
+style, 3D Spectrum style, Fluid trails, Plasma and Fishtank are Hearth canvas
+implementations. No G-Force, native projectM, FishBMC or RSXS code is bundled.

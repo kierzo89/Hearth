@@ -1,0 +1,5 @@
+GOOM by Jean-Christophe Hoelt; browser wrapper by the goom-online contributors.
+https://github.com/goom-online/goom-online.github.io/tree/a83821017af77077b75a2dae8676967053924fec
+The original source archive is bundled as goom-source.tar.gz. LGPL terms are in ../licenses/goom-LGPL.txt.
+Hearth modifications: separate instance wrapper, live analyser input, externally driven render loop, fixed 800x450 canvas, no global resize listener, Chrome 53 JS transpilation. WASM engine unchanged.
+Hearth runs the adapter in goom-worker.js to keep software rendering off the UI thread. The worker source is included beside it.

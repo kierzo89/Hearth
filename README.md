@@ -190,3 +190,14 @@ To publish a new release and keep Homebrew Channel updates working, see [docs/PU
 - `src/lib/wallpaper.ts` lists folders with `ls -1p` and reads pictures with `dd | base64` through the Homebrew Channel service; `src/components/Wallpaper.tsx` cross-fades two layers.
 - `tools/watch-tv-settings.sh` is a read-only helper for finding which TV setting a menu switch changes (it is how the LG logo setting was found).
 - `scripts/gen-repo.mjs` writes `repo/apps.json`, the file the Homebrew Channel reads.
+
+### Custom dashboard build
+
+This local build adds **Blades 360**, an installable JSON theme system, live
+system stats and TV controls, and a TV-resident music player with phone/code
+sign-in. Music does not require a PC companion. Open the Themes, System or
+Music blade, or their shortcut tiles in classic Hearth.
+
+See [Custom dashboard](docs/CUSTOM-DASHBOARD.md) for theme examples, music
+installation, supported controls and limitations. To update only the native
+music service on a rooted TV: `TV_HOST=lg-tv sh scripts/install-music.sh`.

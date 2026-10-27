@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "id": "midnight-blades",
+  "name": "Midnight Blades",
+  "author": "Hearth custom",
+  "description": "The blades layout in deep blue, with cool cyan highlights.",
+  "layout": "blades",
+  "base": "grey",
+  "background": "theme",
+  "accent": "#6bd8e7",
+  "bladeColors": ["#236f84", "#374e94", "#886332", "#694b8a", "#415e67"],
+  "palette": {"bg": "#101b27", "wallpaperStart": "#234152", "wallpaperMid": "#122737", "wallpaperEnd": "#0b141e", "tileBorderFocus": "#6bd8e7", "buttonActiveBg": "#6bd8e7", "buttonActiveText": "#102430"}
+}

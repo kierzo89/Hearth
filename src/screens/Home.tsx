@@ -24,6 +24,8 @@ export interface Appearance {
 }
 
 interface Props {
+	inputActive?: boolean;
+	onPlayerFocus?: () => void;
 	/** the tiles: apps, then any chosen inputs, then LG Home and Settings (in one row, or split over two) */
 	items: TileModel[];
 	timeFormat: TimeFormat;
@@ -45,7 +47,7 @@ interface Props {
 /** The home screen: a clock and the tiles along the bottom, in one row or two.
  *  Left/Right move along a row, Up/Down change row (two rows), OK opens, holding OK opens the app's menu.
  *  Back goes to the first tile. */
-export function Home ({items, timeFormat, appearance, active, paused, onActivate, onLongPress, wake, focus, weather}: Props) {
+export function Home ({items, timeFormat, appearance, active, paused, onActivate, onLongPress, wake, focus, weather, inputActive = true, onPlayerFocus}: Props) {
 	const now = useClock(paused);
 	const [position, setPosition] = useState<RowsPosition>(initialPosition);
 	const sizes = splitRows(items.length, appearance.rows);
@@ -68,17 +70,18 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 	}, [focus && focus.seq]);
 
 	const handleKey = useCallback((key: NavKey): boolean => {
+		if (key === 'down' && at.row === sizes.length - 1 && onPlayerFocus) { onPlayerFocus(); return true; }
 		// functional updates, so quick repeated presses never act on a stale position
 		if (key === 'left' || key === 'right' || key === 'up' || key === 'down') setPosition((p) => movePosition(sizes, p, key));
 		else if (key === 'back') setPosition(initialPosition());        // Back jumps to the first app
 		return true;            // OK is handled by useOkPress below (press vs hold)
-	}, [sizeKey]);
+	}, [sizeKey, at.row, onPlayerFocus]);
 
-	useKeys(handleKey, active);
+	useKeys(handleKey, active && inputActive);
 	useOkPress({
 		onPress: () => { if (selectedItem) onActivate(selectedItem); },
 		onLongPress: () => { if (selectedItem && onLongPress) onLongPress(selectedItem); }
-	}, active);
+	}, active && inputActive);
 
 	// The row's sizes are set on the row itself (not on :root), so the Settings grid keeps its own.
 	const scale = appearance.iconScale / 100;
@@ -105,9 +108,9 @@ export function Home ({items, timeFormat, appearance, active, paused, onActivate
 						<Row
 							key={r}
 							items={items.slice(start, start + size)}
-							focused={r === at.row}
+							focused={inputActive && r === at.row}
 							selected={at.cols[r]}
-							onSelect={(col) => setPosition({row: r, cols: at.cols.map((c, i) => (i === r ? col : c))})}
+							onSelect={(col) => {setPosition({row: r, cols: at.cols.map((c, i) => (i === r ? col : c))});}}
 							onActivate={(col) => onActivate(items[start + col])}
 							tileSize={tileSize}
 							tileGap={tileGap}

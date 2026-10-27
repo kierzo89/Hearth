@@ -95,7 +95,7 @@ for (const tab of ['look', 'clock', 'wallpaper', 'options']) {
   eq(list.length >= 1 && list.length <= 12, true, `${tab} tab has ${list.length} options (a long list scrolls)`);
 }
 const look = p.optionsFor('look', c0);
-eq(look.map((o) => o.valueText), ['OLED black', '100%', '1 row', undefined, '50 px', '40 px', 'Reset'], 'Look tab shows current values (the app-names switch has no text, it is a switch)');
+eq(look.map((o) => o.valueText), ['Open', 'OLED black', '100%', '1 row', undefined, '50 px', '40 px', 'Reset'], 'Look tab shows current values (the app-names switch has no text, it is a switch)');
 eq(p.applyPref(c0, 'rows', 'ok').rows, 2, 'Rows of apps: 1 -> 2');
 eq(p.applyPref(p.applyPref(c0, 'rows', 'ok'), 'rows', 'ok').rows, 1, 'and 2 -> 1');
 eq(p.applyPref(c0, 'showLabels', 'ok').showLabels, false, 'Show app names switches off');

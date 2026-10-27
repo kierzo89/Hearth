@@ -116,8 +116,8 @@ function listViaHomebrew (): Promise<AppEntry[]> {
 		});
 }
 
-/** Read the icons as data URIs in one shell round-trip, cached in localStorage by path.
- *  Icons are requested by *index*, so app IDs never reach the shell. */
+/** Read icons separately: the Homebrew shell caps each command's output at 200 KB.
+ *  A combined read can overflow that limit and lose every icon. */
 function loadIcons (points: LaunchPoint[]): Promise<Record<string, string>> {
 	const cache = readIconCache();
 	const result: Record<string, string> = {};
@@ -130,19 +130,19 @@ function loadIcons (points: LaunchPoint[]): Promise<Record<string, string>> {
 	}
 	if (!missing.length) return Promise.resolve(result);
 
-	// One line per icon: "<index> <base64>". busybox base64 has no -w, so strip newlines.
-	const script = missing
-		.map((m, i) => `printf '%d ' ${i}; base64 ${shellQuote(m.path)} 2>/dev/null | tr -d '\\n'; echo`)
-		.join('; ');
-	return exec(script, 15000).then((out) => {
-		for (const line of out.split('\n')) {
-			const match = /^(\d+) ([A-Za-z0-9+\/=]+)$/.exec(line);
-			const entry = match && missing[Number(match[1])];
-			if (!match || !entry) continue;
-			const url = `data:image/png;base64,${match[2]}`;
-			result[entry.id] = url;
-			cache[entry.path] = url;
-		}
+	// Keep requests sequential so startup does not spawn a shell for every app at once.
+	let reads = Promise.resolve();
+	for (const entry of missing) {
+		reads = reads.then(() => exec(`base64 ${shellQuote(entry.path)} 2>/dev/null | tr -d '\\n'`, 15000)
+			.then((out) => {
+				const data = out.trim();
+				if (!/^[A-Za-z0-9+/]+={0,2}$/.test(data) || data.length % 4 !== 0) return;
+				const url = `data:image/png;base64,${data}`;
+				result[entry.id] = url;
+				cache[entry.path] = url;
+			}).catch(() => { /* One unreadable or oversized icon must not discard the others. */ }));
+	}
+	return reads.then(() => {
 		// keep only the icons of apps that are still installed, so the cache does not grow past the storage limit
 		const kept: Record<string, string> = {};
 		for (const p of points) {

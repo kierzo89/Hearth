@@ -1,0 +1,4 @@
+Kodi Shadertoy preset sources and textures, preserved unmodified.
+https://github.com/xbmc/visualization.shadertoy/tree/034413fa3c8a1488c5f2a0603430439b242aa49f
+Authors are retained in presets.json and shader headers. See each shader header for its licence; the add-on framework GPL notice is in LICENSE.md.
+Hearth supplies its own WebGL audio-texture adapter.

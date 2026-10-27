@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('assert'),s=require('./server.cjs');
+const tracks=s.parseTracks({contents:[{musicResponsiveListItemRenderer:{flexColumns:[{musicResponsiveListItemFlexColumnRenderer:{text:{runs:[{text:'Song'}]}}},{musicResponsiveListItemFlexColumnRenderer:{text:{runs:[{text:'Artist'}]}}}],navigationEndpoint:{watchEndpoint:{videoId:'jNQXAC9IVRw'}},thumbnail:{musicThumbnailRenderer:{thumbnail:{thumbnails:[{url:'https://i.ytimg.com/x.jpg'}]}}}}},{playlistVideoRenderer:{videoId:'jNQXAC9IVRw',title:{simpleText:'Duplicate'}}},{videoRenderer:{videoId:'../../secret',title:{simpleText:'Bad'}}}]});
+assert.strictEqual(tracks.length,1);assert.strictEqual(tracks[0].title,'Song');assert.strictEqual(tracks[0].artist,'Artist');assert.strictEqual(tracks[0].artwork,'https://i.ytimg.com/x.jpg');
+assert.deepStrictEqual(s.parseTracks({}),[]);
+assert.deepStrictEqual(s.parsePlaylists({gridPlaylistRenderer:{playlistId:'PLexample',title:{simpleText:'My playlist'}}}),[{id:'PLexample',title:'My playlist',count:'',artwork:''}]);
+// TV responses put artwork in header, and the actual title inside tile metadata.
+const tvVideo={tileRenderer:{contentType:'TILE_CONTENT_TYPE_VIDEO',header:{tileHeaderRenderer:{thumbnail:{thumbnails:[{url:'https://i.ytimg.com/example.jpg'}]},thumbnailOverlays:[{thumbnailOverlayTimeStatusRenderer:{text:{simpleText:'3:14'}}}]}},metadata:{tileMetadataRenderer:{title:{runs:[{text:'TV song'}]},lines:[{lineRenderer:{items:[{lineItemRenderer:{text:{simpleText:'TV artist'}}}]}}]}},onSelectCommand:{watchEndpoint:{videoId:'jNQXAC9IVRw',playlistId:'LM'}}}};
+assert.deepStrictEqual(s.parseTracks(tvVideo),[{id:'jNQXAC9IVRw',title:'TV song',artist:'TV artist',duration:'3:14',artwork:'https://i.ytimg.com/example.jpg'}]);
+assert.deepStrictEqual(s.parsePlaylists(tvVideo),[], 'a video in a playlist must not itself become a playlist');
+const tvPlaylist={tileRenderer:{contentType:'TILE_CONTENT_TYPE_PLAYLIST',header:{tileHeaderRenderer:{thumbnail:{thumbnails:[{url:'https://i.ytimg.com/small.jpg'},{url:'https://i.ytimg.com/large.jpg'}]}}},metadata:{tileMetadataRenderer:{title:{simpleText:'TV playlist'}}},onSelectCommand:{browseEndpoint:{browseId:'VLPLexample'}}}};
+assert.deepStrictEqual(s.parsePlaylists(tvPlaylist),[{id:'PLexample',title:'TV playlist',count:'',artwork:'https://i.ytimg.com/large.jpg'}]);
+assert.deepStrictEqual(s.parseTracks(tvPlaylist),[]);
+const status=s.publicStatus();assert.strictEqual(status.computerRequired,false);assert.strictEqual(status.signedIn,false);assert.strictEqual(status.auth,null);assert.strictEqual(status.access_token,undefined);
+Promise.all([s.request('http://www.youtube.com/').then(()=>assert.fail('HTTP accepted'),()=>{}),s.request('https://example.com').then(()=>assert.fail('Untrusted host accepted'),()=>{}),s.resolveAudio('../../secret').then(()=>assert.fail('Invalid ID accepted'),()=>{})]).then(()=>console.log('ok   native music renderer parsing, deduplication, account status privacy and outbound host validation')).catch(e=>{console.error(e);process.exitCode=1;});
+assert.deepStrictEqual(s.parseSuggestions({contents:[{searchSuggestionsSectionRenderer:{contents:[{searchSuggestionRenderer:{navigationEndpoint:{searchEndpoint:{query:'faded'}},suggestion:{runs:[{text:'fade'},{text:'d'}]}}},{historySuggestionRenderer:{navigationEndpoint:{searchEndpoint:{query:'Faded'}}}},{searchSuggestionRenderer:{suggestion:{runs:[{text:'faded remix'}]}}}]}}]}),['faded','faded remix']);
+assert.deepStrictEqual(s.parseSuggestions({}),[]);
+assert.strictEqual(s.samplePosition('jNQXAC9IVRw',1.25),40000);
+assert.throws(()=>s.samplePosition('../secrets',0),/Invalid/);
+assert.throws(()=>s.samplePosition('jNQXAC9IVRw',-1),/Invalid/);
+assert.throws(()=>s.samplePosition('jNQXAC9IVRw',Infinity),/Invalid/);

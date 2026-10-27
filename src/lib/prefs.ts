@@ -135,7 +135,8 @@ const WEATHER_PREFS: Pref[] = [
 
 const BASE_PREFS: Pref[] = [
 	// ----- Look -----
-	choice('theme', 'look', 'Theme', 'OLED black keeps unused pixels off. Calm blue-grey is softer.',
+	{id: 'themeLibrary', tab: 'look', label: 'Theme library', description: 'Blades 360, classic themes and custom theme files.', kind: 'action', text: () => 'Open'},
+	choice('theme', 'look', 'Classic palette', 'Returns to classic Hearth in OLED black or calm blue-grey.',
 		THEMES, (c) => c.theme, (c, v) => ({...c, theme: v}), (v) => THEME_TEXT[v]),
 	range('iconScale', 'look', 'Icon size', 'Make the app icons smaller or bigger. ← → adjust.',
 		'iconScale', (c) => c.iconScale, (c, v) => ({...c, iconScale: v}), (v) => `${v}%`),

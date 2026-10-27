@@ -18,7 +18,19 @@ import {getLogo, setLogo, closeHomeAndMeasure, closeLgHome, getHomeApp, LG_HOME_
 import {applyHomeHook, getHookStatus, hookMessage, installHomeHook, logLine, markAliveSoon, reapplyHomeHook, removeHomeHook, setBootLink, stockHome} from './lib/homehook';
 import {applyPref, disabledReason, findPref, optionsFor, resetLook, type Press, type SystemInfo} from './lib/prefs';
 import {loadConfig, saveConfig, toggleId, DEFAULT_WALLPAPER, type UserConfig} from './lib/storage';
-import {applyTheme} from './theme/tokens';
+import {HearthHome} from './dashboard/HearthHome';
+import {Blades} from './dashboard/Blades';
+import {ThemeLibrary} from './dashboard/ThemeLibrary';
+import {SystemPanel} from './dashboard/SystemPanel';
+import {MusicPanel, MiniPlayer} from './dashboard/MusicPanel';
+import {Guide} from './dashboard/Guide';
+import {QueuePanel} from './dashboard/QueuePanel';
+import {useGuideShortcut} from './dashboard/useGuideShortcut';
+import {useIdleVisualiser} from './dashboard/useIdleVisualiser';
+import {useMusic} from './dashboard/useMusic';
+import {VisualiserLayer, VisualiserPanel} from './dashboard/Visualiser';
+import {visualiserForSong, loadVisualiserPrefs, saveVisualiserPrefs, type VisualiserPrefs} from './dashboard/visualisers';
+import {activeTheme, applyDashboardTheme, loadThemes, saveThemes, type ThemeState} from './dashboard/themes';
 import {useTimeFormat} from './hooks/useTimeFormat';
 import {AppMenu} from './components/AppMenu';
 import {hiddenAfterUpgrade, toggleHidden, visibleApps} from './lib/apporder';
@@ -31,13 +43,16 @@ import {WEATHER_ENABLED} from './config/features';
 import {fetchWeather} from './lib/weathernet';
 import {FRESH_MS, isFresh, readWeatherCache, usableCached, weatherView, writeWeatherCache, type City, type WeatherData} from './lib/weather';
 
-type Screen = 'home' | 'settings' | 'picker' | 'cities';
+type Screen = 'home' | 'settings' | 'picker' | 'cities' | 'themes' | 'system' | 'music' | 'visualisers' | 'queue';
 
 const TAB = {apps: 'apps', sources: 'sources', look: 'look', clock: 'clock', weather: 'weather', wallpaper: 'wallpaper', options: 'options'} as const;
 const MISC = {lgHome: 'lg-home', settings: 'settings', system: 'system-settings'} as const;
 
 /** The three tiles that always end the row. */
 const MISC_TILES: TileModel[] = [
+	{key: 'dashboard-music', label: 'Music', glyph: 'music'},
+	{key: 'dashboard-system', label: 'System stats', glyph: 'tv'},
+	{key: 'dashboard-themes', label: 'Themes', glyph: 'gear'},
 	{key: MISC.lgHome, label: 'LG Home', glyph: 'house'},
 	{key: MISC.system, label: 'System Settings', glyph: 'tv'},
 	{key: MISC.settings, label: 'Hearth Settings', glyph: 'gear'}
@@ -46,12 +61,39 @@ const MISC_TILES: TileModel[] = [
 export function App () {
 	const [screen, setScreen] = useState<Screen>('home');
 	const [config, setConfig] = useState<UserConfig>(loadConfig);
+	const [themeState, setThemeState] = useState<ThemeState>(() => loadThemes(config.theme));
+	const dashboardTheme = activeTheme(themeState);
+	const music = useMusic();
+	const [playerFocused, setPlayerFocused] = useState(false);
+	const [guideOpen,setGuideOpen]=useState(false);
+	const [visualising, setVisualising] = useState(false);
+	const [visualPrefs, setVisualPrefs] = useState(loadVisualiserPrefs);
+	const updateVisualPrefs = (prefs: VisualiserPrefs) => { setVisualPrefs(prefs); saveVisualiserPrefs(prefs); };
+	// One choice for the whole dashboard, including hidden/full-screen renderers.
+	// A playback ID also changes for repeat-one; pause, seek and resume keep it.
+	useEffect(() => {
+		if (!music.state.track) return;
+		setVisualPrefs(previous => {
+			const next = visualiserForSong(previous);
+			if (next !== previous) saveVisualiserPrefs(next);
+			return next;
+		});
+	}, [music.state.playbackId]);
+
+
 	const [apps, setApps] = useState<AppEntry[]>(cachedApps);      // last known list: the row is drawn at once
 	const [asleep, setAsleep] = useState(document.hidden);
 	const [wakes, setWakes] = useState(0);                    // counts each return to the front (Home pressed)
 	const [wallpaperOn, setWallpaperOn] = useState(!document.hidden);
 	const wasHidden = useRef(document.hidden);
 	const [menu, setMenu] = useState<{key: string; title: string; app: AppEntry | null} | null>(null);   // the tile whose Move / Hide / Uninstall menu is open
+	const automaticVisualiser=useIdleVisualiser(screen==='home'&&!guideOpen&&!menu&&!visualising&&!asleep&&(music.state.playing||music.state.loading),visualPrefs.idleSeconds);
+	const fullVisualiser=visualising||automaticVisualiser;
+	useGuideShortcut(screen==='home'&&!menu&&!fullVisualiser,guideOpen,()=>setGuideOpen(true));
+	useEffect(()=>{if(asleep){setGuideOpen(false);setVisualising(false);}},[asleep]);
+	const visualBackground = screen === 'home' && visualPrefs.background && !!music.state.track && !fullVisualiser;
+	useEffect(() => { document.documentElement.setAttribute('data-music-visualiser', visualBackground ? 'on' : 'off'); }, [visualBackground]);
+	useEffect(() => { setPlayerFocused(false); }, [screen, !!music.state.track]);
 	const [focus, setFocus] = useState<{key: string; seq: number} | undefined>(undefined);               // asks Home to follow a moved tile
 	const replaceRef = useRef(config.replaceHome);
 	const [allInputs, setInputs] = useState<InputSource[]>([]);
@@ -95,7 +137,7 @@ export function App () {
 	}, []);
 
 	// Colours follow the theme setting.
-	useEffect(() => applyTheme(config.theme), [config.theme]);
+	useEffect(() => applyDashboardTheme(dashboardTheme), [dashboardTheme]);
 
 	const showToast = useCallback((text: string, kind: ToastMessage['kind'] = 'info') => {
 		window.clearTimeout(toastTimer.current);
@@ -221,7 +263,7 @@ export function App () {
 	}, [asleep]);
 
 	// Inputs are only read when they're needed: some are on the home row, or Settings is open.
-	const needInputs = config.sourceIds.length > 0 || screen === 'settings';
+	const needInputs = config.sourceIds.length > 0 || screen === 'settings' || dashboardTheme.layout !== 'classic';
 	useEffect(() => {
 		if (!needInputs) return undefined;
 		const refresh = () => {
@@ -364,6 +406,9 @@ export function App () {
 	}, [showToast]);
 
 	const updateConfig = (next: UserConfig) => { setConfig(next); saveConfig(next); };
+	const updateThemes = useCallback((next: ThemeState) => {
+		try { saveThemes(next); setThemeState(next); } catch { showToast('Not enough storage to save the theme', 'error'); }
+	}, [showToast]);
 
 	// ----- derived lists -----
 	const shownApps = useMemo(
@@ -398,6 +443,12 @@ export function App () {
 
 	// ----- actions -----
 	const onActivate = useCallback((item: TileModel) => {
+		if (item.key === 'dashboard-music' || item.key === 'dashboard-music-connect') { setScreen('music'); return; }
+		if (item.key === 'dashboard-queue') { setScreen('queue'); return; }
+		if (item.key === 'dashboard-visualisers') { setScreen('visualisers'); return; }
+		if (item.key === 'dashboard-system') { setScreen('system'); return; }
+		if (item.key === 'dashboard-themes' || item.key === 'dashboard-theme-import') { setScreen('themes'); return; }
+		if (item.key === 'dashboard-theme-classic') { updateThemes({...themeState, active: 'hearth-plus'}); return; }
 		if (item.key === MISC.settings) { setScreen('settings'); return; }
 		if (item.key === MISC.system) { launchSystemSettings().catch(() => showToast("Couldn't open the TV's settings", 'error')); return; }
 		if (item.key === MISC.lgHome) {
@@ -414,7 +465,7 @@ export function App () {
 			if (config.replaceHome) logLine(`launcher: the TV refused to open ${item.key}`);
 			showToast(`Couldn't open ${item.label}`, 'error');
 		});
-	}, [showToast, config.replaceHome]);
+	}, [showToast, config.replaceHome, themeState, updateThemes]);
 
 	const onToggle = useCallback((tabId: string, key: string) => {
 		if (tabId === TAB.apps) {
@@ -442,9 +493,12 @@ export function App () {
 		if (blocked) { showToast(blocked, 'error'); return; }
 		if (optionId === 'weatherOn' && !config.weather.city) { showToast('Choose a city first'); setScreen('cities'); return; }
 		if (pref.kind === 'action') {
-			if (optionId === 'wallpaper') setScreen('picker');
+			if (optionId === 'themeLibrary') setScreen('themes');
+			else if (optionId === 'dashboardSystem') setScreen('system');
+			else if (optionId === 'dashboardMusic') setScreen('music');
+			else if (optionId === 'wallpaper') setScreen('picker');
 			else if (optionId === 'weatherCity') setScreen('cities');
-			else if (optionId === 'resetLook') { updateConfig(resetLook(config)); showToast('Look and clock reset'); }
+			else if (optionId === 'resetLook') { updateConfig(resetLook(config)); updateThemes({...themeState, active: 'black'}); showToast('Look and clock reset'); }
 			else if (optionId === 'replaceHome' || optionId === 'startAtBoot') {
 				const refresh = () => getHookStatus().then((homeHook) => setSystemInfo((previous) => ({...previous, homeHook})));
 				const running = !!(systemInfo.homeHook && systemInfo.homeHook.running);
@@ -508,8 +562,8 @@ export function App () {
 			return;
 		}
 		const next = applyPref(config, optionId, press);
-		if (next !== config) updateConfig(next);
-	}, [config, showToast, systemInfo, tvInput]);
+		if (next !== config) { updateConfig(next); if (optionId === 'theme') updateThemes({...themeState, active: next.theme}); }
+	}, [config, showToast, systemInfo, tvInput, themeState, updateThemes]);
 
 	const onRefresh = useCallback(() => {
 		manualLoad.current = true;
@@ -538,7 +592,7 @@ export function App () {
 
 	// Hold OK on an app or input: its Move / Hide (/ Uninstall) menu. LG Home and Settings have no menu.
 	const onLongPress = useCallback((item: TileModel) => {
-		if (item.key === MISC.lgHome || item.key === MISC.settings || item.key === MISC.system) return;
+		if (item.key.indexOf('dashboard-') === 0 || item.key === MISC.lgHome || item.key === MISC.settings || item.key === MISC.system) return;
 		const app = apps.find((a) => a.id === item.key) || null;
 		setMenu({key: item.key, title: item.label, app});
 	}, [apps]);
@@ -581,14 +635,23 @@ export function App () {
 
 	return (
 		<>
-			{wallpaperOn && <Wallpaper config={config.wallpaper} onProblem={(text) => showToast(text, 'error')} />}
+			{wallpaperOn && (dashboardTheme.background === 'wallpaper' || (visualPrefs.idleWallpaper && !!music.state.track)) && <Wallpaper visualiserBackdrop={automaticVisualiser && visualPrefs.idleWallpaper} config={config.wallpaper} onProblem={(text) => showToast(text, 'error')} />}
+			{dashboardTheme.layout !== 'blades' && dashboardTheme.background === 'theme' && <div class="wallpaper" />}
 			{/* Home stays mounted under the other screens so it keeps its focus position. */}
-			<Home items={homeItems} timeFormat={timeFormat} appearance={appearance} active={screen === 'home' && !menu} paused={asleep} onActivate={onActivate} onLongPress={onLongPress} wake={wakes} focus={focus} weather={weatherLine} />
+			<VisualiserLayer player={music} prefs={visualPrefs} visible={(visualBackground && dashboardTheme.layout !== 'blades') || fullVisualiser} fullScreen={fullVisualiser} automatic={automaticVisualiser} interactive={!guideOpen} onChange={updateVisualPrefs} onClose={() => setVisualising(false)} onSettings={() => { setVisualising(false); setScreen('visualisers'); }} />
+			{dashboardTheme.layout === 'blades' ? <Blades nowPlaying={music.state.track} visualiser={visualBackground ? <VisualiserLayer player={music} prefs={visualPrefs} visible={true} fullScreen={false} onChange={updateVisualPrefs} onClose={() => undefined} onSettings={() => setScreen('visualisers')} /> : undefined} inputActive={!playerFocused && !fullVisualiser && !guideOpen} onPlayerFocus={music.state.track ? () => setPlayerFocused(true) : undefined} items={homeItems} inputs={inputs.map(inputTile)} theme={dashboardTheme} active={screen === 'home' && !menu} paused={asleep} wake={wakes} focus={focus} timeFormat={timeFormat} weather={weatherLine} onActivate={onActivate} onLongPress={onLongPress} /> : dashboardTheme.layout === 'hearth' ? <HearthHome apps={orderedTiles.filter(t=>!inputs.some(i=>i.appId===t.key))} inputs={inputs.map(inputTile)} timeFormat={timeFormat} appearance={appearance} active={screen==='home'&&!menu} inputActive={!playerFocused&&!fullVisualiser&&!guideOpen} paused={asleep} wake={wakes} focus={focus} weather={weatherLine} player={music.state} onPlayerFocus={music.state.track?()=>setPlayerFocused(true):undefined} onActivate={onActivate} onLongPress={onLongPress} /> : <Home inputActive={!playerFocused && !fullVisualiser && !guideOpen} onPlayerFocus={music.state.track ? () => setPlayerFocused(true) : undefined} items={homeItems} timeFormat={timeFormat} appearance={appearance} active={screen === 'home' && !menu} paused={asleep} onActivate={onActivate} onLongPress={onLongPress} wake={wakes} focus={focus} weather={weatherLine} />}
+			{screen === 'themes' && <ThemeLibrary items={homeItems} appearance={appearance} timeFormat={timeFormat} wallpaper={config.wallpaper} state={themeState} onChange={updateThemes} onClose={() => setScreen('home')} notify={showToast} />}
+			{screen === 'system' && <SystemPanel onClose={() => setScreen('home')} onSettings={() => setScreen('settings')} notify={showToast} />}
+			{screen === 'queue' && <QueuePanel player={music} onClose={() => setScreen('music')} />}
+			{screen === 'music' && <MusicPanel onQueue={() => setScreen('queue')} player={music} onVisualisers={() => setScreen('visualisers')} onClose={() => setScreen('home')} notify={showToast} />}
+			{screen === 'visualisers' && <VisualiserPanel prefs={visualPrefs} onChange={updateVisualPrefs} onClose={() => setScreen('music')} onFullScreen={() => setVisualising(true)} active={!fullVisualiser && !guideOpen} />}
+			{screen === 'home' && <MiniPlayer player={music} focused={playerFocused && !fullVisualiser && !menu && !guideOpen} onFocus={() => setPlayerFocused(true)} onBlur={() => setPlayerFocused(false)} onVisualise={() => setVisualising(true)} onOpen={() => { setPlayerFocused(false); setScreen('music'); }} />}
 			{menu && <AppMenu title={menu.title} moves={menuMoves} hideDetail={menu.app ? 'You can add it back in Settings → Apps' : 'You can add it back in Settings → Sources'} showUninstall={!!menu.app} blockedReason={menuBlocked} onMove={(action) => moveTile(menu.key, action)} onHide={() => hideTile(menu)} onUninstall={() => { if (menu.app) removeApp(menu.app); }} onClose={() => setMenu(null)} />}
 			{/* Settings stays mounted under the picker so it keeps its tab. */}
 			{screen !== 'home' && <Settings tabs={tabs} active={screen === 'settings'} onToggle={onToggle} onReorder={onReorder} onOption={onOption} onRefresh={onRefresh} onAdjust={onAdjust} onClose={() => setScreen('home')} />}
 			{screen === 'picker' && <Picker onChoose={onChooseWallpaper} onClose={() => setScreen('settings')} />}
 			{WEATHER_ENABLED && screen === 'cities' && <CityPicker allowShell={config.useHomebrew && isWebOS()} onChoose={onChooseCity} onClose={() => setScreen('settings')} />}
+			{guideOpen&&<Guide player={music} onClose={()=>setGuideOpen(false)} onQueue={()=>{setVisualising(false);setScreen('queue');}} onMusic={()=>{setVisualising(false);setScreen('music');}} onHome={()=>{setVisualising(false);setScreen('home');}} onVisualise={()=>{setScreen('home');setVisualising(true);}} onSystem={()=>{setVisualising(false);setScreen('system');}} onThemes={()=>{setVisualising(false);setScreen('themes');}} notify={showToast} />}
 			<Toast message={toast} />
 		</>
 	);

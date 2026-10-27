@@ -7,6 +7,7 @@ import {
 } from '../lib/wallpaper';
 
 interface Props {
+	visualiserBackdrop?: boolean;
 	config: WallpaperConfig;
 	/** called (at most once per wallpaper choice) when pictures can't be shown; says why */
 	onProblem: (text: string) => void;
@@ -23,7 +24,7 @@ interface Props {
  *
  *  The slideshow pauses while the launcher is in the background. The picture from the copy appears at once
  *  (no fade); only a change from one slideshow picture to the next cross-fades. */
-export function Wallpaper ({config, onProblem}: Props) {
+export function Wallpaper ({config, onProblem, visualiserBackdrop = false}: Props) {
 	const layerA = useRef<HTMLDivElement>(null);
 	const layerB = useRef<HTMLDivElement>(null);
 	const report = useRef(onProblem);
@@ -211,7 +212,7 @@ export function Wallpaper ({config, onProblem}: Props) {
 	}, [config.mode, config.path, config.intervalSec, config.shuffle]);
 
 	return (
-		<div class="wallpaper" aria-hidden="true">
+		<div class={'wallpaper'+(visualiserBackdrop?' wallpaper--visualiser':'')} aria-hidden="true">
 			<div class="wallpaper__layer" ref={layerA} />
 			<div class="wallpaper__layer" ref={layerB} />
 			<div class="wallpaper__scrim" />
