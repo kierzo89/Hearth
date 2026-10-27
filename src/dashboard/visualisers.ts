@@ -15,18 +15,21 @@ export const VISUALISERS = [
 	{id: 'plasma', name: 'Plasma', detail: 'Hearth effect · colourful audio-reactive waves'},
 	{id: 'fish', name: 'Fishtank', detail: 'Hearth effect · audio-reactive swimming particles'}
 ];
-export interface VisualiserPrefs {mode: string; background: boolean; preset: number; idleSeconds: number; randomEachSong: boolean; idleWallpaper: boolean;}
+export interface VisualiserPrefs {mode: string; background: boolean; preset: number; idleSeconds: number; rotation: 'timed' | 'song' | 'manual'; idleWallpaper: boolean;}
 export const VISUALISER_KEY = 'hearth-visualisers-v1';
 export function loadVisualiserPrefs (): VisualiserPrefs {
-	try { const p = JSON.parse(localStorage.getItem(VISUALISER_KEY) || '{}'); return {idleWallpaper: p.idleWallpaper !== false, randomEachSong: p.randomEachSong !== false, mode: VISUALISERS.some((v) => v.id === p.mode) ? p.mode : 'spectrum', background: p.background !== false, idleSeconds:[0,30,60,120,300].includes(p.idleSeconds)?p.idleSeconds:120, preset: Number.isInteger(p.preset) && p.preset >= 0 ? p.preset : 0}; } catch { return {mode: 'spectrum', background: true, preset: 0, idleSeconds:120, randomEachSong:true, idleWallpaper:true}; }
+	try { const p = JSON.parse(localStorage.getItem(VISUALISER_KEY) || '{}'); return {idleWallpaper: p.idleWallpaper !== false, rotation: ['timed','song','manual'].includes(p.rotation) ? p.rotation : p.randomEachSong === false ? 'manual' : 'timed', mode: VISUALISERS.some((v) => v.id === p.mode) ? p.mode : 'spectrum', background: p.background !== false, idleSeconds:[0,30,60,120,300].includes(p.idleSeconds)?p.idleSeconds:120, preset: Number.isInteger(p.preset) && p.preset >= 0 ? p.preset : 0}; } catch { return {mode: 'spectrum', background: true, preset: 0, idleSeconds:120, rotation:'timed', idleWallpaper:true}; }
 }
 export function saveVisualiserPrefs (prefs: VisualiserPrefs): void { try { localStorage.setItem(VISUALISER_KEY, JSON.stringify(prefs)); } catch { /* Optional persistence. */ } }
-/** Pick once per song, excluding the current effect so each change is visible.
+/** Pick a different effect so each change is visible.
  * Preset engines wrap this random index to their own installed preset count. */
-export function visualiserForSong(prefs: VisualiserPrefs, random = Math.random): VisualiserPrefs {
-	if (!prefs.randomEachSong) return prefs;
+export function nextVisualiser(prefs: VisualiserPrefs, random = Math.random): VisualiserPrefs {
+	if (prefs.rotation === 'manual') return prefs;
 	const choices = VISUALISERS.filter(v => v.id !== prefs.mode);
 	return {...prefs, mode: choices[Math.floor(random() * choices.length)].id, preset: Math.floor(random() * 1000000)};
+}
+export function visualiserForSong(prefs: VisualiserPrefs, random = Math.random): VisualiserPrefs {
+	return prefs.rotation === 'song' ? nextVisualiser(prefs, random) : prefs;
 }
 export interface VisualiserEngine {render: (time: number) => void; dispose: () => void; preset?: (index: number) => string;}
 const scripts: Partial<Record<string, Promise<void>>> = {};

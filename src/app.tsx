@@ -29,7 +29,8 @@ import {useGuideShortcut} from './dashboard/useGuideShortcut';
 import {useIdleVisualiser} from './dashboard/useIdleVisualiser';
 import {useMusic} from './dashboard/useMusic';
 import {VisualiserLayer, VisualiserPanel} from './dashboard/Visualiser';
-import {visualiserForSong, loadVisualiserPrefs, saveVisualiserPrefs, type VisualiserPrefs} from './dashboard/visualisers';
+import {createVisualiserRotation} from './dashboard/visualiserRotation';
+import {nextVisualiser, visualiserForSong, loadVisualiserPrefs, saveVisualiserPrefs, type VisualiserPrefs} from './dashboard/visualisers';
 import {activeTheme, applyDashboardTheme, loadThemes, saveThemes, type ThemeState} from './dashboard/themes';
 import {useTimeFormat} from './hooks/useTimeFormat';
 import {AppMenu} from './components/AppMenu';
@@ -93,6 +94,18 @@ export function App () {
 	useEffect(()=>{if(asleep){setGuideOpen(false);setVisualising(false);}},[asleep]);
 	const visualBackground = screen === 'home' && visualPrefs.background && !!music.state.track && !fullVisualiser;
 	useEffect(() => { document.documentElement.setAttribute('data-music-visualiser', visualBackground ? 'on' : 'off'); }, [visualBackground]);
+	const rotateVisualiser = visualPrefs.rotation === 'timed' && (music.state.playing || music.state.loading) && !asleep && (visualBackground || fullVisualiser);
+	useEffect(() => {
+		const clock = createVisualiserRotation(() => {
+			if (document.hidden) return;
+			setVisualPrefs(previous => {
+				if (previous.rotation !== 'timed') return previous;
+				const next = nextVisualiser(previous); saveVisualiserPrefs(next); return next;
+			});
+		});
+		clock.enable(rotateVisualiser);
+		return () => clock.dispose();
+	}, [rotateVisualiser]);
 	useEffect(() => { setPlayerFocused(false); }, [screen, !!music.state.track]);
 	const [focus, setFocus] = useState<{key: string; seq: number} | undefined>(undefined);               // asks Home to follow a moved tile
 	const replaceRef = useRef(config.replaceHome);

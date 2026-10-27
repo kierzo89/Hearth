@@ -280,15 +280,19 @@ cleanup and shared audio sampling. `npm test`, build and packaging pass.
 The prior app bundle is backed up at
 `/media/developer/hearth-backups/app.before-guide-queue-idle-20261026.js`.
 
-## Random visualiser per song
+## Automatic visualiser changes
 
-Music → Visualisers → Random each song is on by default, including when upgrading
-from older preferences. Each song (including repeat-one) chooses a different
-effect and a random preset for engines with presets. Pause, resume and seeking
-keep the current effect. The dashboard and full-screen views share the selection.
-Selecting an effect or changing its preset switches random mode off and keeps
-that manual choice across songs and restarts. Toggle Random each song on again
-to resume automatic choices from the next song.
+Music → Visualisers → Change visualiser defaults to **Every 3 minutes**.
+While music is playing and visuals are visible, a different effect is chosen
+without an immediate repeat. MilkDrop and Kodi Shadertoy also get a random preset.
+Song changes and switching between dashboard and fullscreen visuals do not reset
+this timer. Pausing playback, hiding Hearth or leaving the visuals stops the timer;
+returning starts a fresh three minutes.
+
+The setting cycles through Every 3 minutes, Every song and Manual. Selecting an
+effect or preset switches to Manual and preserves that choice across restarts.
+Existing automatic settings migrate to three minutes; saved manual choices stay
+manual. The separate automatic fullscreen delay and wallpaper interval are unchanged.
 
 ## Blades colour collection
 
