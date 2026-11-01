@@ -4,10 +4,9 @@ This is **kierzo89's fork of [Hearth](https://github.com/rudra-avatar/Hearth)**,
 adding an Xbox 360 Blades / XBMC MC360-inspired dashboard, custom themes,
 TV-local music playback and music visualisers to the LG webOS launcher.
 
-**The custom implementation is on the [custom-dashboard branch](https://github.com/kierzo89/Hearth/tree/custom-dashboard).**
-This `main` branch hosts the showcase below alongside the upstream Hearth base.
-Select `custom-dashboard` before building the features shown here; the upstream
-installation instructions further down install the original Hearth version.
+**The custom dashboard, music service, visualisers and MC360 assets are now
+included on `main`.** The earlier `custom-dashboard` branch preserves the
+previous standalone version. Build this branch to get the integrated features.
 
 ![Blades 360 Apps dashboard](docs/screenshots/blades/01-blades-apps.png)
 
@@ -35,8 +34,8 @@ installation instructions further down install the original Hearth version.
   improved app icon loading and theme access across the dashboard layouts.
 
 [Browse the full screenshot gallery](docs/BLADES-GALLERY.md) ·
-[Custom dashboard setup and controls](https://github.com/kierzo89/Hearth/blob/custom-dashboard/docs/CUSTOM-DASHBOARD.md) ·
-[Custom source code](https://github.com/kierzo89/Hearth/tree/custom-dashboard)
+[Custom dashboard setup and controls](https://github.com/kierzo89/Hearth/blob/main/docs/CUSTOM-DASHBOARD.md) ·
+[Custom source code](https://github.com/kierzo89/Hearth/tree/main)
 
 ### A few of the new looks
 
@@ -49,20 +48,42 @@ saved dashboard code with demo app/input data. They are not original historical
 captures or a recording of the current TV state. No personal photos, wallpaper,
 account data or credentials are included.
 
-The images show the optional, locally retained MC360 artwork. Original MC360
-textures and WAV files are not distributed with the custom source because their
-redistribution licence has not been established; public builds use CSS gradients
-and synthesised navigation sounds. Other visualisers retain their own licences.
-See [third-party credits and notices](https://github.com/kierzo89/Hearth/blob/custom-dashboard/THIRD_PARTY_NOTICES.md).
+The MC360 textures and navigation sounds shown here are now bundled with their
+original credits and disclaimer. CSS gradients and synthesised sounds remain
+available as fallbacks. These assets and the visualiser engines retain their own
+notices; see [third-party credits and notices](THIRD_PARTY_NOTICES.md).
 The music integration is unofficial and may be affected by YouTube changes;
 the TV-local service requires a rooted TV. Not every native XBMC/Kodi add-on is
 included or compatible.
 
 ---
 
+## Build this fork
+
+```sh
+git clone https://github.com/kierzo89/Hearth.git
+cd Hearth
+npm ci
+npm test
+npm run build
+npm run package
+```
+
+Install the generated package from `build/`. For SSH deployment to a rooted TV,
+configure `tv.env` as described below, or use `TV_HOST=root@YOUR_TV_IP npm run deploy`.
+The deployment script also installs the TV-local music service. For installation
+through other tools, see [music service setup](docs/CUSTOM-DASHBOARD.md).
+Choose **Themes → Blades 360** or **Hearth Plus** after launching Hearth.
+
+The custom features have been exercised on webOS 5.6.2. Visualiser support depends
+on the TV's browser and graphics capabilities; the upstream compatibility notes
+below do not establish compatibility for every added visualiser.
+
 ## Original Hearth documentation
 
-The following documents the upstream Hearth base preserved on this branch.
+The following documents the upstream Hearth base retained in this fork.
+The upstream Homebrew repository below installs upstream Hearth; use the build
+instructions above for this fork's additions.
 
 <p align="center"><img src="public/largeIcon.png" alt="Hearth icon" width="120"></p>
 

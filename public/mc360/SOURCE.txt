@@ -1,0 +1,5 @@
+MC360 by Team Blackbolt (2006–2007)
+Archive: https://github.com/Team-Resurgent/XBMC-Skinning-Project/tree/484fa2309eab69291d546398d7444e3d761f8cac/MC360
+Graphics: Blackbolt and Jezz-X. Sound mapping: MC360/sounds/sounds.xml.
+Original assets, unmodified, included at the fork owner’s request.
+These files belong to their original creators and are not relicensed under Hearth's MIT licence. See README_MC360forXBMC.txt for the original credits and disclaimer.

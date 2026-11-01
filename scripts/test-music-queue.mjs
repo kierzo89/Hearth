@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {build} from 'esbuild';
+const out=new URL('../node_modules/.cache-queue-test.mjs',import.meta.url).pathname;
+await build({entryPoints:[new URL('../src/dashboard/queue.ts',import.meta.url).pathname],bundle:true,format:'esm',outfile:out,platform:'node',logLevel:'error'});
+const m=await import(out),connection={baseUrl:'http://localhost',token:'not-saved'};
+const song=id=>m.entry({id,title:id,artist:'artist',artwork:'',duration:''},connection);
+const a=song('aaaaaaaaaaa'),b=song('bbbbbbbbbbb'),c=song('ccccccccccc');let q={...m.emptyQueue(),entries:[a,b,c],current:a.key};
+const duplicate=song('aaaaaaaaaaa');q=m.insertQueue(q,duplicate,true);assert.deepEqual(q.entries.map(e=>e.key),[a.key,duplicate.key,b.key,c.key]);assert.notEqual(a.key,duplicate.key,'duplicate tracks retain separate identities');
+q=m.moveQueue(q,a.key,1);assert.equal(q.current,a.key,'moving the playing entry preserves playback identity');assert.equal(m.stepQueue(q,1),b.key);
+q=m.removeQueue(q,a.key);assert.equal(q.current,b.key,'removing current selects its successor');
+q={...q,current:c.key};assert.equal(m.stepQueue(q,1,true),null,'repeat-off ends the queue');assert.equal(m.stepQueue({...q,repeat:'all'},1,true),duplicate.key);assert.equal(m.stepQueue({...q,repeat:'one'},1,true),c.key);assert.equal(m.stepQueue({...q,current:b.key,repeat:'one'},1),c.key,'manual next ignores repeat-one');
+const before={...m.emptyQueue(),entries:[a,b,c,duplicate],current:b.key};q=m.shuffleQueue(before,()=>0);assert.deepEqual(q.entries.slice(0,2),[a,b]);assert.deepEqual(new Set(q.entries.map(e=>e.key)),new Set(before.entries.map(e=>e.key)));assert.deepEqual(m.shuffleQueue(q).entries,q.entries,'shuffle-off preserves the visible order');
+assert.equal(m.insertQueue({...q,entries:Array(500).fill(a)},b,false).entries.length,500);
+assert.equal(m.removeQueue({...m.emptyQueue(),entries:[a],current:a.key},a.key).current,null);
+console.log('ok   queue duplicate identity, play-next, reorder, removal, repeat boundaries, shuffle and cap');

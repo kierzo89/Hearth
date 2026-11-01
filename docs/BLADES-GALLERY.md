@@ -8,11 +8,11 @@ The TV was not changed. No personal wallpaper, account data or credentials appea
 Each image is a **1920 × 1080 PNG**. Click an image to open its full-size file;
 use GitHub’s download control to save it.
 
-[Feature summary](../README.md#what-ive-added) · [Custom source branch](https://github.com/kierzo89/Hearth/tree/custom-dashboard)
+[Feature summary](../README.md#what-ive-added) · [Custom source branch](https://github.com/kierzo89/Hearth/tree/main)
 
-The metallic artwork shown comes from the optional local MC360 asset pack;
-public builds use fallback gradients and sounds. See the
-[licence and asset notes](https://github.com/kierzo89/Hearth/blob/custom-dashboard/THIRD_PARTY_NOTICES.md).
+The metallic artwork and navigation sounds from MC360 are now bundled with their
+original credits; CSS gradients and synthesised sounds remain as fallbacks. See the
+[licence and asset notes](https://github.com/kierzo89/Hearth/blob/main/THIRD_PARTY_NOTICES.md).
 
 ## Overview
 

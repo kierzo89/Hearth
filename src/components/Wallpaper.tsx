@@ -9,6 +9,7 @@ import {
 } from '../lib/wallpaper';
 
 interface Props {
+	visualiserBackdrop?: boolean;
 	config: WallpaperConfig;
 	/** how solid the picture is, % (100 = fully) */
 	opacity?: number;
@@ -27,7 +28,7 @@ interface Props {
  *
  *  The slideshow pauses while the launcher is in the background. The picture from the copy appears at once
  *  (no fade); only a change from one slideshow picture to the next cross-fades. */
-export function Wallpaper ({config, opacity = 100, onProblem}: Props) {
+export function Wallpaper ({config, opacity = 100, onProblem, visualiserBackdrop = false}: Props) {
 	const layerA = useRef<HTMLDivElement>(null);
 	const layerB = useRef<HTMLDivElement>(null);
 	const wrap = useRef<HTMLDivElement>(null);
@@ -238,7 +239,7 @@ export function Wallpaper ({config, opacity = 100, onProblem}: Props) {
 	const vars = varScope('wallpaper', {'--wallpaper-opacity': opacity < 100 ? String(opacity / 100) : undefined});
 
 	return (
-		<div class={`wallpaper wallpaper--bare${vars.cls ? ' ' + vars.cls : ''}`} aria-hidden="true" ref={wrap} style={vars.css || undefined}>
+		<div class={`wallpaper wallpaper--bare${visualiserBackdrop ? ' wallpaper--visualiser' : ''}${vars.cls ? ' ' + vars.cls : ''}`} aria-hidden="true" ref={wrap} style={vars.css || undefined}>
 			<div class="wallpaper__layer" ref={layerA} />
 			<div class="wallpaper__layer" ref={layerB} />
 			<div class="wallpaper__scrim" />
@@ -250,7 +251,7 @@ export function Wallpaper ({config, opacity = 100, onProblem}: Props) {
 /** The bundled-photo slideshow. Own component and own state, so a change of picture re-renders nothing else.
  *  The first photo appears at once; each next one is loaded and drawn invisibly for a moment (so the picture is
  *  already decoded), then fades in over the old one. Pauses while `paused` (launcher in the background). */
-export function PhotoShow ({intervalSec, shuffle, paused}: {intervalSec: number; shuffle: boolean; paused: boolean}) {
+export function PhotoShow ({intervalSec, shuffle, paused, visualiserBackdrop = false}: {intervalSec: number; shuffle: boolean; paused: boolean; visualiserBackdrop?: boolean}) {
 	const layerA = useRef<HTMLDivElement>(null);
 	const layerB = useRef<HTMLDivElement>(null);
 	const wrap = useRef<HTMLDivElement>(null);
@@ -324,7 +325,7 @@ export function PhotoShow ({intervalSec, shuffle, paused}: {intervalSec: number;
 	}, [intervalSec, shuffle, paused]);
 
 	return (
-		<div class="wallpaper wallpaper--bare" aria-hidden="true" ref={wrap}>
+		<div class={"wallpaper wallpaper--bare"+(visualiserBackdrop?" wallpaper--visualiser":"")} aria-hidden="true" ref={wrap}>
 			<div class="wallpaper__layer" ref={layerA} />
 			<div class="wallpaper__layer" ref={layerB} />
 			<div class="wallpaper__scrim" />

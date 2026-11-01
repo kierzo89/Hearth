@@ -140,36 +140,12 @@ function listViaHomebrew (): Promise<AppEntry[]> {
 		});
 }
 
-/** Icons are read this many per shell command: one big command for every icon timed out on TVs with many apps,
- *  which left letters instead of icons. */
-export const ICON_BATCH = 4;
-
-type IconJob = {id: string; path: string};
-
-/** One shell round-trip for up to ICON_BATCH icons ("<index> <base64>" per line). Icons are requested by *index*,
- *  so app IDs never reach the shell. Resolves with the icons it got; never rejects. */
-function readIcons (jobs: IconJob[]): Promise<Record<number, string>> {
-	// busybox base64 has no -w, so strip newlines
-	const script = jobs
-		.map((m, i) => `printf '%d ' ${i}; base64 ${shellQuote(m.path)} 2>/dev/null | tr -d '\\n'; echo`)
-		.join('; ');
-	return exec(script, 8000).then((out) => {
-		const got: Record<number, string> = {};
-		for (const line of out.split('\n')) {
-			const match = /^(\d+) ([A-Za-z0-9+\/=]+)$/.exec(line);
-			if (match && jobs[Number(match[1])]) got[Number(match[1])] = `data:image/png;base64,${match[2]}`;
-		}
-		return got;
-	}).catch(() => ({}));
-}
-
-/** Read the icons as data URIs, cached in localStorage by path. Batches of ICON_BATCH, run one after another; an icon
- *  missing from its batch is asked for once more on its own. The cache is saved after every batch, so a slow TV keeps
- *  what it has already read. */
+/** Read icons separately: the Homebrew shell caps each command's output at 200 KB.
+ *  A combined read can overflow that limit and lose every icon. */
 function loadIcons (points: LaunchPoint[]): Promise<Record<string, string>> {
 	const cache = readIconCache();
 	const result: Record<string, string> = {};
-	const missing: IconJob[] = [];
+	const missing: {id: string; path: string}[] = [];
 	for (const p of points) {
 		const path = p.largeIcon || p.icon;
 		if (!path || !SAFE_PATH.test(path)) continue;
@@ -178,7 +154,19 @@ function loadIcons (points: LaunchPoint[]): Promise<Record<string, string>> {
 	}
 	if (!missing.length) return Promise.resolve(result);
 
-	const keep = (): void => {
+	// Keep requests sequential so startup does not spawn a shell for every app at once.
+	let reads = Promise.resolve();
+	for (const entry of missing) {
+		reads = reads.then(() => exec(`base64 ${shellQuote(entry.path)} 2>/dev/null | tr -d '\\n'`, 15000)
+			.then((out) => {
+				const data = out.trim();
+				if (!/^[A-Za-z0-9+/]+={0,2}$/.test(data) || data.length % 4 !== 0) return;
+				const url = `data:image/png;base64,${data}`;
+				result[entry.id] = url;
+				cache[entry.path] = url;
+			}).catch(() => { /* One unreadable or oversized icon must not discard the others. */ }));
+	}
+	return reads.then(() => {
 		// keep only the icons of apps that are still installed, so the cache does not grow past the storage limit
 		const kept: Record<string, string> = {};
 		for (const p of points) {
@@ -186,17 +174,8 @@ function loadIcons (points: LaunchPoint[]): Promise<Record<string, string>> {
 			if (path && cache[path]) kept[path] = cache[path];
 		}
 		writeIconCache(kept);
-	};
-	const store = (job: IconJob, url: string): void => { result[job.id] = url; cache[job.path] = url; };
-
-	const batches: IconJob[][] = [];
-	for (let i = 0; i < missing.length; i += ICON_BATCH) batches.push(missing.slice(i, i + ICON_BATCH));
-	return batches.reduce((chain, batch) => chain.then(() => readIcons(batch).then((got) => {
-		const lost: IconJob[] = [];
-		batch.forEach((job, i) => { if (got[i]) store(job, got[i]); else lost.push(job); });
-		// per-icon retry, one command each
-		return lost.reduce((c, job) => c.then(() => readIcons([job]).then((one) => { if (one[0]) store(job, one[0]); })), Promise.resolve());
-	}).then(keep)), Promise.resolve()).then(() => result, () => result);
+		return result;
+	}).catch(() => result);
 }
 
 /** The app list as last seen, for an instant first paint (empty the first time). */

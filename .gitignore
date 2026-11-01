@@ -7,3 +7,27 @@ build/
 # local, per-person settings
 tv.env
 src/config/catalog.local.ts
+
+# Local downloads and extracted TV packages (may contain device configuration)
+downloads/
+
+# Private deployment notes, account state, photos and captures
+SETUP.md
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+cookies*.txt
+*credentials*.json
+hearth-music.json
+hearth-music/
+private/
+photos/
+wallpapers/
+screenshots/
+backups/
+
+# MC360 artwork and sounds are tracked with their original credits.

@@ -165,7 +165,8 @@ const WEATHER_PREFS: Pref[] = [
 
 const BASE_PREFS: Pref[] = [
 	// ----- Look -----
-	choice('theme', 'look', 'Theme', 'Colours of the tiles, text and background. OLED black keeps unused pixels off. On the light themes a white clock turns dark grey so it can be read (change it under Wallpaper).',
+	{id: 'themeLibrary', tab: 'look', label: 'Theme library', description: 'Blades 360, classic themes and custom theme files.', kind: 'action', text: () => 'Open'},
+	choice('theme', 'look', 'Classic palette', 'Colours of the tiles, text and background. OLED black keeps unused pixels off. On the light themes a white clock turns dark grey so it can be read (change it under Wallpaper).',
 		THEMES, (c) => c.theme, (c, v) => ({...c, theme: v, clock: {...c.clock, color: LIGHT_THEMES.indexOf(v) !== -1 && c.clock.color === 'white' ? 'charcoal' : LIGHT_THEMES.indexOf(c.theme) !== -1 && LIGHT_THEMES.indexOf(v) === -1 && c.clock.color === 'charcoal' ? 'white' : c.clock.color}}), (v) => THEME_TEXT[v]),
 	choice('quietSec', 'look', 'Quiet mode', 'Hides the apps (the clock stays) when no key is pressed for this long. Any key brings them back; that first key does nothing else. ← → or OK change it.',
 		rangeValues('quietSec'), (c) => c.quietSec, (c, v) => ({...c, quietSec: v}), (v) => (v === 0 ? 'Off' : `${v} seconds`)),

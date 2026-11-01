@@ -7,7 +7,7 @@
 #   TV_HOST=root@192.0.2.10 sh scripts/install.sh
 #
 # Uses webOS's developer install service (the same one the Homebrew Channel and
-# ares-install use). Nothing outside the app's own directory is touched.
+# ares-install use), then installs this build's TV-local music sidecar and boot hook.
 # Without SSH: `npx ares-setup-device`, then `npx ares-install --device <name> build/*.ipk`.
 set -e
 cd "$(dirname "$0")/.."
@@ -26,6 +26,8 @@ scp -q "$IPK" "$TV_HOST:$REMOTE_IPK"
 echo "Installing $APP_ID..."
 # luna-send needs a tty (-tt) to print anything; the subscription ends when the install does.
 ssh -tt "$TV_HOST" "luna-send -w 60000 -i luna://com.webos.appInstallService/dev/install '{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"$REMOTE_IPK\",\"subscribe\":true}' | grep -oE '\"state\":\"[^\"]*\"|\"errorText\":\"[^\"]*\"' | uniq; rm -f '$REMOTE_IPK'" | tr -d '\r'
+
+TV_HOST="$TV_HOST" sh scripts/install-music.sh
 
 echo "Launching $APP_ID..."
 ssh -tt "$TV_HOST" "luna-send -n 1 luna://com.webos.applicationManager/launch '{\"id\":\"$APP_ID\"}'" | tr -d '\r'

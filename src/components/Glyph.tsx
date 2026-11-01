@@ -1,6 +1,6 @@
 // Inline SVG line icons used by the Misc row and the settings badge.
 
-export type GlyphName = 'house' | 'gear' | 'tv';
+export type GlyphName = 'house' | 'gear' | 'tv' | 'music';
 
 /** Small icons for the wallpaper picker. */
 export function PickerIcon ({kind}: {kind: 'folder' | 'picture' | 'drive' | 'slideshow' | 'default' | 'info' | 'search' | 'pin'}) {
@@ -23,6 +23,8 @@ export function Glyph ({name}: {name: GlyphName}) {
 		<svg class="tile__glyph" viewBox="0 0 24 24" aria-hidden="true">
 			{name === 'house'
 				? <path d="M3 11.5 12 4l9 7.5M5.5 9.8V20h13V9.8M10 20v-6h4v6" />
+				: name === 'music'
+				? <><path d="M9 17V5l11-2v12M9 8l11-2" /><ellipse cx="6" cy="18" rx="3" ry="2" /><ellipse cx="17" cy="16" rx="3" ry="2" /></>
 				: name === 'tv'
 				? <>
 					<rect x="2.8" y="4.5" width="18.4" height="12.2" rx="1.8" />
