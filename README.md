@@ -1,3 +1,69 @@
+# Hearth — custom Blades dashboard
+
+This is **kierzo89's fork of [Hearth](https://github.com/rudra-avatar/Hearth)**,
+adding an Xbox 360 Blades / XBMC MC360-inspired dashboard, custom themes,
+TV-local music playback and music visualisers to the LG webOS launcher.
+
+**The custom implementation is on the [custom-dashboard branch](https://github.com/kierzo89/Hearth/tree/custom-dashboard).**
+This `main` branch hosts the showcase below alongside the upstream Hearth base.
+Select `custom-dashboard` before building the features shown here; the upstream
+installation instructions further down install the original Hearth version.
+
+![Blades 360 Apps dashboard](docs/screenshots/blades/01-blades-apps.png)
+
+## What I've added
+
+- **Blades 360 dashboard:** animated sliding panels for Apps, Inputs, Music,
+  System and Themes, curved metallic edges, a page-coloured active blade,
+  remote/pointer navigation and navigation sounds.
+- **Custom theme system:** install JSON themes, preview a highlighted theme
+  before applying it, and choose eight additional Blades palettes:
+  Futuristic, Gothic, Cyber, Synthwave, Aurora, Ember, Ocean and Royal.
+- **Hearth Plus:** an alternative based on the original Hearth layout, with
+  direct access to Music, Queue, Visualisers, System, Themes and Settings.
+- **Music on the TV:** an unofficial YouTube Music integration with device-code
+  account sign-in, library and liked songs, search as you type, recent searches,
+  and a playback queue. The service runs on the TV without a PC companion.
+- **A dashboard player:** song artwork, playback progress and remote-accessible
+  playback controls, including pressing Down from the home menu to reach them.
+- **Music visualisers:** Butterchurn/MilkDrop, GOOM, Kodi Shadertoy presets and
+  canvas effects inspired by classic XBMC visualisers. Effects change every
+  three minutes by default, with every-song and manual options.
+- **Automatic fullscreen visuals:** an adjustable idle delay, wake-on-input,
+  and wallpaper slideshows continuing behind the visualiser by default.
+- **System tools and polish:** live system statistics, quick TV settings,
+  improved app icon loading and theme access across the dashboard layouts.
+
+[Browse the full screenshot gallery](docs/BLADES-GALLERY.md) ·
+[Custom dashboard setup and controls](https://github.com/kierzo89/Hearth/blob/custom-dashboard/docs/CUSTOM-DASHBOARD.md) ·
+[Custom source code](https://github.com/kierzo89/Hearth/tree/custom-dashboard)
+
+### A few of the new looks
+
+| Futuristic | Gothic | Cyber |
+|---|---|---|
+| ![Futuristic Blades](docs/screenshots/blades/07-blades-futuristic.png) | ![Gothic Blades](docs/screenshots/blades/08-blades-gothic.png) | ![Cyber Blades](docs/screenshots/blades/09-blades-cyber.png) |
+
+These are **1920 × 1080 recreations made on 1 November 2026**, rendered from
+saved dashboard code with demo app/input data. They are not original historical
+captures or a recording of the current TV state. No personal photos, wallpaper,
+account data or credentials are included.
+
+The images show the optional, locally retained MC360 artwork. Original MC360
+textures and WAV files are not distributed with the custom source because their
+redistribution licence has not been established; public builds use CSS gradients
+and synthesised navigation sounds. Other visualisers retain their own licences.
+See [third-party credits and notices](https://github.com/kierzo89/Hearth/blob/custom-dashboard/THIRD_PARTY_NOTICES.md).
+The music integration is unofficial and may be affected by YouTube changes;
+the TV-local service requires a rooted TV. Not every native XBMC/Kodi add-on is
+included or compatible.
+
+---
+
+## Original Hearth documentation
+
+The following documents the upstream Hearth base preserved on this branch.
+
 <p align="center"><img src="public/largeIcon.png" alt="Hearth icon" width="120"></p>
 
 # Hearth for WebOS: a fast, calm home screen for webOS TVs
